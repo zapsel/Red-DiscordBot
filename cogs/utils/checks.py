@@ -14,6 +14,16 @@ def is_owner_check(ctx):
 
 def is_owner():
     return commands.check(is_owner_check)
+    
+# Added by Ashton
+def is_owner_or_permissions(**perms):
+    def predicate(ctx):
+        if ctx.message.author.id == settings.owner:
+            return True
+            
+        return check_permissions(ctx,perms)
+    return commands.check(predicate)
+    
 
 # The permission system of the bot is based on a "just works" basis
 # You have permissions and the bot has permissions. If you meet the permissions
