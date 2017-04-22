@@ -765,7 +765,7 @@ class Owner:
                          "{} days ago!)".format(days_since))
 
         try:
-            await self.bot.say(embed=embed)
+            await self.bot.say(content="",embed=embed)
         except discord.HTTPException:
             await self.bot.say("I need the `Embed links` permission "
                                "to send this")
@@ -775,7 +775,7 @@ class Owner:
         """Shows Red's uptime"""
         since = self.bot.uptime.strftime("%Y-%m-%d %H:%M:%S")
         passed = self.get_bot_uptime()
-        await self.bot.say("Been up for: **{}** (since {} UTC)"
+        await self.bot.say("**In-house (Core):** Been up for: **{}** (since {} UTC)"
                            "".format(passed, since))
 
     @commands.command()

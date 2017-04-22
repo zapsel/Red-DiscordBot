@@ -82,6 +82,16 @@ class CustomCommands:
             await self.bot.say("There are no custom commands in this server. Use addcom [command] [text]")
 
     @commands.command(pass_context=True, no_pm=True)
+    async def numcom(self, ctx):
+        """Shows current amount of custom commands"""
+        server = ctx.message.server
+        if server.id in self.c_commands:
+            num_coms = len(self.c_commands[server.id])
+            await self.bot.say("There are currently {} custom commands in your server.".format(num_coms))
+        else:
+            await self.bot.say("There are no custom commands in this server. Use addcom [command] [text]")
+    
+    @commands.command(pass_context=True, no_pm=True)
     async def customcommands(self, ctx):
         """Shows custom commands list"""
         server = ctx.message.server

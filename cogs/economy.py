@@ -475,13 +475,19 @@ class Economy:
         highscore = ""
         place = 1
         for acc in topten:
+            print(acc.id)
+            try:
+                leuser_name = dataIO.load_json("/var/www/html/luiscripts/data/fetchusers.txt")[acc.id]["user"]["username"]
+            except:
+                leuser_name = acc.name
+            print(leuser_name)
             highscore += str(place).ljust(len(str(top)) + 1)
-            highscore += (acc.name + " ").ljust(23 - len(str(acc.balance)))
+            highscore += (leuser_name + " ").ljust(23 - len(str(acc.balance)))
             highscore += str(acc.balance) + "\n"
             place += 1
         if highscore != "":
             for page in pagify(highscore, shorten_by=12):
-                await self.bot.say(box(page, lang="py"))
+                await self.bot.say(box(page, lang="py")+"\nFull rankings at https://discord.injabie3.moe/economy")
         else:
             await self.bot.say("There are no accounts in the bank.")
 

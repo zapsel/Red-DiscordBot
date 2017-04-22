@@ -270,7 +270,7 @@ class General:
             data.set_author(name=server.name)
 
         try:
-            await self.bot.say(embed=data)
+            await self.bot.say(content="",embed=data)
         except discord.HTTPException:
             await self.bot.say("I need the `Embed links` permission "
                                "to send this")
