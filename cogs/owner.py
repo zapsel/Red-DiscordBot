@@ -886,7 +886,7 @@ class Owner:
         """Shows Red's uptime"""
         since = self.bot.uptime.strftime("%Y-%m-%d %H:%M:%S")
         passed = self.get_bot_uptime()
-        await self.bot.say("Been up for: **{}** (since {} UTC)"
+        await self.bot.say("**AWS EC2 (RSS):** Been up for: **{}** (since {} UTC)"
                            "".format(passed, since))
 
     @commands.command()
