@@ -11,10 +11,11 @@ import itertools
 import re
 
 """
-Cogs Purpose: To dm a user certain "highlight" words that they specify
-Requirements:
-Credit: This idea was first implemented by Danny (https://github.com/Rapptz/) but that bot is currently closed source.
-        So this is my own, and most definitely subpar, implementation of highlights
+Cog Purpose: 
+    - To dm a user certain "highlight" words that they specify
+Credit: 
+    - This idea was first implemented by Danny (https://github.com/Rapptz/) but that bot is currently closed source.
+    So this is my own subpar implementation of the highlight bot :D
 """
 
 def check_filesystem():
@@ -116,6 +117,8 @@ class Highlight(object):
             new_user['words'] = [word]
             self.highlights['guilds'][guild_idx][guild_id]['users'].append(new_user)
             self._update_highlights(self.highlights)
+            t_msg = await self.bot.say("Registered and highlight word added, {}".format(user_name))
+            await self._sleep_then_delete(t_msg,2)
             
         await self.bot.delete_message(ctx.message)
         
@@ -219,12 +222,6 @@ class Highlight(object):
             await self._sleep_then_delete(t_msg,5)
     
     async def check_highlights(self, msg):
-        """
-        1. check if the msg is in any of any users words
-        2. if it was, get 5-6 messages AROUND the msg
-        3. construct some metadata based off this info
-        4. format a message, send to DM
-        """
         if isinstance(msg.channel,discord.PrivateChannel):
             return
             
@@ -250,7 +247,7 @@ class Highlight(object):
         async for msg in self.bot.logs_from(message.channel,limit=6,around=message):
             msgs.append(msg)
         msg_ctx = sorted(msgs, key=lambda r: r.timestamp)
-        notify_msg = "In <#{1.channel.id}>, you were mentioned with highlight word **{0}**:\n".format(word,message)
+        notify_msg = "In {1.channel.mention}, you were mentioned with highlight word **{0}**:\n".format(word,message)
         embed_msg = ""
         for msg in msg_ctx:
             time = msg.timestamp
@@ -267,9 +264,6 @@ class Highlight(object):
         return bool(re.search(regex,string.lower()))
         
     async def _is_active(self, user_id, channel, message):
-        # NOTE: this is a naive approach to checking activity, for now to keep simple, just see if user
-        # created a message in the last 50 messages. and if they did, was in less than 20 seconds since 
-        # the message we are currently checking for highlight words
         is_active = False
         
         async for msg in self.bot.logs_from(channel,limit=50,before=message):
@@ -277,7 +271,7 @@ class Highlight(object):
             if msg.author.id == user_id and delta_since_msg <= timedelta(seconds=20):
                 is_active = True
                 break
-        return is_active   
+        return is_active
     
 def setup(bot):
     check_filesystem()
