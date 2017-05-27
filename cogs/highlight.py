@@ -4,15 +4,15 @@ from __main__ import send_cmd_help
 from cogs.utils.dataIO import dataIO
 import asyncio
 import aiohttp
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from threading import Lock
 import os
 import itertools
+import re
 
 """
 Cogs Purpose: To dm a user certain "highlight" words that they specify
 Requirements:
-
 Credit: This idea was first implemented by Danny (https://github.com/Rapptz/) but that bot is currently closed source.
         So this is my own, and most definitely subpar, implementation of highlights
 """
@@ -116,6 +116,8 @@ class Highlight(object):
             new_user['words'] = [word]
             self.highlights['guilds'][guild_idx][guild_id]['users'].append(new_user)
             self._update_highlights(self.highlights)
+            
+        await self.bot.delete_message(ctx.message)
         
     @highlight.command(name="remove", pass_context=True, no_pm=True)
     async def remove_highlight(self, ctx, word: str):
@@ -144,6 +146,8 @@ class Highlight(object):
             msg += " Add a word to become registered"
             t_msg = await self.bot.say(msg.format(user_name))
             await self._sleep_then_delete(t_msg,5)
+            
+        await self.bot.delete_message(ctx.message)
         
     @highlight.command(name="list", pass_context=True, no_pm=True)
     async def list_highlight(self, ctx):
@@ -235,20 +239,32 @@ class Highlight(object):
         for user in self.highlights['guilds'][guild_idx][guild_id]['users']:
             for word in user['words']:
                 active = await self._is_active(user['id'],msg.channel,msg)
-                if word in msg.content and not active and user_id != user['id']:
+                match = self._is_word_match(word,msg.content)
+                if match and not active and user_id != user['id']:
                     hilite_user = await self.bot.get_user_info(user['id'])
                     await self._notify_user(hilite_user,msg,word)
                     
     async def _notify_user(self, user, message, word):
+        await asyncio.sleep(3) # possibly pick up messages after trigger that will help with the context
         msgs = []
-        async for msg in self.bot.logs_from(message.channel,limit=10,around=message):
+        async for msg in self.bot.logs_from(message.channel,limit=6,around=message):
             msgs.append(msg)
         msg_ctx = sorted(msgs, key=lambda r: r.timestamp)
         notify_msg = "In <#{1.channel.id}>, you were mentioned with highlight word **{0}**:\n".format(word,message)
+        embed_msg = ""
         for msg in msg_ctx:
-            time = msg.timestamp.isoformat(' ')
-            notify_msg += "[{0}] {1.author.name}#{1.author.discriminator}: {1.content}\n".format(time,msg)
-        await self.bot.send_message(user,notify_msg)
+            time = msg.timestamp
+            time = time.replace(tzinfo=timezone.utc).strftime('%H:%M:%S')
+            embed_msg += "[{0} UTC] {1.author.name}#{1.author.discriminator}: {1.content}\n".format(time,msg)
+        embed = discord.Embed(title=user.name,description=embed_msg,colour=discord.Colour.red())
+        time = message.timestamp.replace(tzinfo=timezone.utc)
+        footer = "Triggered at | {}".format(time.strftime('%a, %d %b %Y %I:%M%p'))
+        embed.set_footer(text=footer)
+        await self.bot.send_message(user,content=notify_msg,embed=embed)
+        
+    def _is_word_match(self, word, string):
+        regex = r'\b{}\b'.format(word.lower())
+        return bool(re.search(regex,string.lower()))
         
     async def _is_active(self, user_id, channel, message):
         # NOTE: this is a naive approach to checking activity, for now to keep simple, just see if user
@@ -268,4 +284,3 @@ def setup(bot):
     hilite = Highlight(bot)
     bot.add_listener(hilite.check_highlights, 'on_message')
     bot.add_cog(hilite)
-    
