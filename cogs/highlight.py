@@ -224,7 +224,11 @@ class Highlight(object):
     async def check_highlights(self, msg):
         if isinstance(msg.channel,discord.PrivateChannel):
             return
-            
+        
+        perms = msg.channel.permissions_for(msg.author)
+        if not perms.read_messages:
+            return
+
         guild_id = msg.server.id
         user_id = msg.author.id
         user_name = msg.author.name
