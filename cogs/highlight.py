@@ -224,10 +224,6 @@ class Highlight(object):
     async def check_highlights(self, msg):
         if isinstance(msg.channel,discord.PrivateChannel):
             return
-        
-        perms = msg.channel.permissions_for(msg.author)
-        if not perms.read_messages:
-            return
 
         guild_id = msg.server.id
         user_id = msg.author.id
@@ -242,7 +238,10 @@ class Highlight(object):
                 active = await self._is_active(user['id'],msg.channel,msg)
                 match = self._is_word_match(word,msg.content)
                 if match and not active and user_id != user['id']:
-                    hilite_user = await self.bot.get_user_info(user['id'])
+                    hilite_user = msg.server.get_member(user['id'])
+                    perms = msg.channel.permissions_for(hilite_user)
+                    if not perms.read_messages:
+                        break
                     await self._notify_user(hilite_user,msg,word)
                     
     async def _notify_user(self, user, message, word):
