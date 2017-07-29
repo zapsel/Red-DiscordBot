@@ -200,7 +200,9 @@ class RSSFeed(object):
                 try:
                     await self.bot.send_message(post_channel, embed=embed)
                 except Exception as error:
+                    print ("RSS exception:")
                     print (error)
+                    print ("==========")
                 
             try:
                 await asyncio.sleep(self.check_interval)
