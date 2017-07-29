@@ -196,7 +196,11 @@ class RSSFeed(object):
                 rss_image = "https://upload.wikimedia.org/wikipedia/en/thumb/4/43/Feed-icon.svg/1200px-Feed-icon.svg.png"
                 embed.set_footer(text=footer_text, icon_url=rss_image)
                 
-                await self.bot.send_message(post_channel, embed=embed)
+                #Keep this in a try block in case of Discord's explicit filter.
+                try:
+                    await self.bot.send_message(post_channel, embed=embed)
+                except Exception as error:
+                    print (error)
                 
             try:
                 await asyncio.sleep(self.check_interval)
