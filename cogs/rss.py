@@ -144,6 +144,9 @@ class RSSFeed(object):
             feeds['feeds'][index]['latest_post_time'] = latest_post_time
         dataIO.save_json("data/rss/feeds.json", feeds)
         
+        #Heartbeat
+        dataIO.save_json("data/rss/timestamp.json","{}")
+        
         return news
         
 #---------------------------------------------------------------------------------------------#       
