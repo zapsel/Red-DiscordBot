@@ -362,7 +362,7 @@ class Economy:
             await self.bot.say("That user has no bank account.")
 
     @_bank.command(name="set", pass_context=True)
-    @checks.admin_or_permissions(manage_server=True)
+    @checks.mod_or_permissions(manage_messages=True)
     async def _set(self, ctx, user: discord.Member, credits: SetParser):
         """Sets credits of user's bank account. See help for more operations
 
