@@ -254,11 +254,11 @@ class Highlight(object):
         embed_msg = ""
         for msg in msg_ctx:
             time = msg.timestamp
-            time = time.replace(tzinfo=timezone.utc).strftime('%H:%M:%S')
-            embed_msg += "[{0} UTC] {1.author.name}#{1.author.discriminator}: {1.content}\n".format(time,msg)
+            time = time.replace(tzinfo=timezone.utc).astimezone(tz=None).strftime('%H:%M:%S %Z')
+            embed_msg += "[{0}] {1.author.name}#{1.author.discriminator}: {1.content}\n".format(time,msg)
         embed = discord.Embed(title=user.name,description=embed_msg,colour=discord.Colour.red())
-        time = message.timestamp.replace(tzinfo=timezone.utc)
-        footer = "Triggered at | {}".format(time.strftime('%a, %d %b %Y %I:%M%p'))
+        time = message.timestamp.replace(tzinfo=timezone.utc).astimezone(tz=None)
+        footer = "Triggered at | {}".format(time.strftime('%a, %d %b %Y %I:%M%p %Z'))
         embed.set_footer(text=footer)
         await self.bot.send_message(user,content=notify_msg,embed=embed)
         
