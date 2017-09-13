@@ -382,18 +382,18 @@ class TempChannels:
                             
                             if len(self.settings[server]["roleallow"]) > 0:
                             # If we have allow roles, automatically deny @everyone read messages.
-                                deny_perms.append(discord.PermissionOverwrite(read_messages=False))
+                                deny_perms.append(discord.PermissionOverwrite(read_messages=False, add_reactions=False))
                                 deny_roles.append(self.bot.get_server(server).default_role)
                                 for override_roles in self.settings[server]["roleallow"]:
                                     find_role = discord.utils.get(self.bot.get_server(server).roles, name=override_roles)
                                     allow_roles.append(find_role)
                             
-                            allow_list = itertools.zip_longest(allow_roles, allow_perms, fillvalue=allow_perms[0])
+                            allow_list = itertools.zip_longest(allow_roles, allow_perms, fillvalue=discord.PermissionOverwrite(read_messages=True, add_reactions=False))
                             
                             
                             # Check for deny permissions.
                             if len(self.settings[server]["roledeny"]) > 0:
-                                deny_perms.append(discord.PermissionOverwrite(send_messages=False))
+                                deny_perms.append(discord.PermissionOverwrite(send_messages=False, add_reactions=False))
                                 for override_roles2 in self.settings[server]["roledeny"]:
                                     find_role2 = discord.utils.get(self.bot.get_server(server).roles, name=override_roles2)
                                     deny_roles.append(find_role2)
