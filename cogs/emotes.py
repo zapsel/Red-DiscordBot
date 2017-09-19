@@ -5,12 +5,6 @@ from cogs.utils import checks
 from cogs.utils.dataIO import fileIO
 import os
 from __main__ import send_cmd_help
-from io import BytesIO
-
-try:
-    import PIL.Image as Image
-except Exception as e:
-    raise RuntimeError("You must `pip3 install pillow` to use emotes") from e
 
 
 class Emotes:
@@ -42,22 +36,11 @@ class Emotes:
             return 5
         return self.settings[server.id].get("LIMIT_PER_MESSAGE", 5)
 
-    def get_scale(self, server):
-        try:
-            return self.settings[server.id]["SCALE"]
-        except KeyError:
-            return 1.0
-
     def set_limit_per_message(self, server, value):
         if server is None:
             return
         if self._is_enabled(server):
             self.settings[server.id]["LIMIT_PER_MESSAGE"] = int(value)
-            self.save_settings()
-
-    def set_scale(self, server, value):
-        if self._is_enabled(server):
-            self.settings[server.id]["SCALE"] = float(value)
             self.save_settings()
 
     async def update_emote_list(self):
@@ -108,19 +91,23 @@ class Emotes:
         self.set_limit_per_message(ctx.message.server, limit)
         await self.bot.say("Limit set to {}.".format(limit))
 
-    @emoteset.command(name="scale", pass_context=True)
-    async def _emoteset_scale(self, ctx, scale: float):
-        """Sets server emote scaling"""
-        if scale > 5 or scale < 0.5:
-            await self.bot.say("Scale must be between 0.5 and 3")
-            return
-        self.set_scale(ctx.message.server, scale)
-        await self.bot.say("Emote scale set to {}".format(scale))
-
     def _write_image(self, chan_id, name, image_data):
         # Assume channel folder already exists
         with open('data/emotes/{}/{}'.format(chan_id, name), 'wb') as f:
             f.write(image_data)
+
+    @emoteset.command(name="delete", pass_context=True)
+    async def _delete_emote(self, ctx, emote_name: str):
+    	"""Removes an emote"""
+    	server=ctx.message.server
+    	valid_emotes = self.available_emotes[server.id]
+    	for emote in valid_emotes:
+	        if emote_name == emote.get("name", ""):
+	        	valid_emotes.remove(emote)
+	        	await self.bot.say("'{}' has been deleted. You happy now Sayaka?!".format(emote_name))
+	        	self.save_available_emotes()
+	        	return
+    	await self.bot.reply("That emote doesn't exist or is already disabled")
 
     async def _remove_all_emotes(self, server, chan_id, name=""):
         assert isinstance(server, discord.Server)
@@ -168,8 +155,7 @@ class Emotes:
                 })
         self.save_available_emotes()
 
-    @commands.group(no_pm=True, pass_context=True,
-                    invoke_without_command=True)
+    @commands.command(no_pm=True, pass_context=True)
     async def emote(self, ctx, emote_name: str):
         """Enabled emote and all emotes from same twitch channel"""
         server = ctx.message.server
@@ -181,7 +167,7 @@ class Emotes:
             await self.bot.say(
                 "This server already has '{}'".format(emote_name))
             return
-        await self.bot.say("Retrieving emotes from '{}'.".format(emote_name) +
+        await self.bot.say("Retrieving '{}' and other twitch channel emotes.".format(emote_name) +
                            " Please wait a moment.")
         for emote in self.emote_list:
             if emote_name == emote.get("regex", ""):
@@ -195,12 +181,6 @@ class Emotes:
                                    "channel emotes added.")
                 return
         await self.bot.say("No such emote '{}' found.".format(emote_name))
-
-    @emote.command(pass_context=True, name="update")
-    async def emote_update(self, ctx):
-        """Refreshes list of emotes"""
-        await self.update_emote_list()
-        await self.bot.say("Updated emote list.")
 
     async def check_messages(self, message):
         if message.author.id == self.bot.user.id:
@@ -223,20 +203,7 @@ class Emotes:
                         emote["chan_id"], emote["file_name"])
                     if not os.path.exists(fname):
                         break
-                    img = Image.open(fname)
-                    if self.get_scale(message.server) != 1.0:
-                        scale = self.get_scale(message.server)
-                        img = img.resize((int(img.width * scale),
-                                          int(img.height * scale)),
-                                         Image.ANTIALIAS)
-                    tmpfile = BytesIO()
-                    fmt = os.path.splitext(emote["file_name"])[1].replace('.',
-                                                                          '')
-                    img.save(tmpfile, format=fmt)
-                    tmpfile.seek(0)
-                    await self.bot.send_file(message.channel, tmpfile,
-                                             filename=emote["file_name"])
-                    tmpfile.close()
+                    await self.bot.send_file(message.channel, fname)
                     count += 1
                     if self.get_limit_per_message(message.server) != 0 and \
                             count >= \
